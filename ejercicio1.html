@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <style>
+            output {
+                display: block;
+                position: relative;
+                margin: 5px;
+            }
+            .red {
+                border: 1px solid red;
+                color: red;
+                font-weight: bold;
+                padding: 20px;
+            }
+            .green {
+                border: 1px solid green;
+                color: green;
+                font-weight: bold;
+                padding: 20px;
+            }
+            .blue {
+                border: 1px solid blue;
+                color: blue;
+                font-weight: bold;
+                padding: 20px;
+            }
+        </style>
+        <script>
+            var contador = 0;
+            function onKeydown() {
+                contador++;
+                console.log("Press " + contador);
+            }
+
+            function onMostrar() {
+                var inputN1 = document.getElementById('n1');
+                var value = inputN1.value;
+
+                var outputN1 = document.getElementById('salidaN1');
+
+                outputN1.classList.remove('red');
+                outputN1.classList.remove('blue');
+                outputN1.classList.remove('green');
+
+                if(value < 100) {
+                    outputN1.classList.add('red');
+                } else if(value > 100) {
+                    outputN1.classList.add('blue');
+                } else {
+                    outputN1.classList.add('green');
+                }
+
+                outputN1.innerHTML = value;
+            }
+        </script>
+    </head>
+    <body>
+        <input type="number" id="n1" onkeydown="onKeydown()" />
+        <button onclick="onMostrar()">Mostrar</button>
+        <br>
+        <output id="salidaN1"></output>
+    </body>
+</html>
