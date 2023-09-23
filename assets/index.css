@@ -1,0 +1,23 @@
+input.input-error {
+    border: 1px solid red;
+}
+
+.userColor {
+    border: 1px solid #000;
+    width: 60px;
+    height: 30px;
+}
+
+.detail-color {
+    font-size: 10px;
+    text-align: center;
+}
+
+.avatar {
+    border-radius: 50%;
+    border: 1px solid #666;
+}
+
+.eliminar, .editar {
+    cursor: pointer;
+}
