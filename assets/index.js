@@ -1,5 +1,6 @@
 window.addEventListener("load", onloadwindow)
 var avatarBase64 = null;
+var indexUser = null;
 
 function onloadwindow(e) {
     var btnSubmit = document.getElementById("btnSubmit");
@@ -50,7 +51,7 @@ function validarForm() {
     }
 
     avatar.classList.remove("input-error");
-    if (avatar.value === "") {
+    if (avatar.value === "" && indexUser === null) {
         avatar.classList.add("input-error");
         isValid = false;
     }
@@ -85,8 +86,14 @@ function clickFrmSubmit(e) {
     //-----
     var inpAvatar = document.getElementById("avatar");
     //var avatar = inpAvatar.value;
-    var file = inpAvatar.files[0];
-    getBase64(file);
+    var arrayUsers = loadData();
+    if(indexUser===null || inpAvatar.value!=="") {
+        var file = inpAvatar.files[0];
+        getBase64(file);
+    } else if(indexUser !== null && inpAvatar.value === "") {
+        avatarBase64 = arrayUsers[indexUser].avatar;
+    }
+
     window.setTimeout(function () {
         //-----
         //Creacion de objeto 
@@ -101,8 +108,14 @@ function clickFrmSubmit(e) {
         };
         console.log(objUsuario);
         //*********/
-        var arrayUsers = loadData();
-        arrayUsers.push(objUsuario);
+        if(indexUser===null) {
+            arrayUsers.push(objUsuario);
+        } else {
+            arrayUsers[indexUser] = objUsuario;
+        }
+
+        indexUser = null;
+        
         printTable(arrayUsers);
         //*********/
         jArray = JSON.stringify(arrayUsers);
@@ -124,6 +137,16 @@ function loadData() {
     return arrayUsers;
 }
 
+function calcularEdad(fecha) {
+    var dateNacimiento = new Date(fecha);
+    var now = new Date();
+    var diffAnios = now - dateNacimiento; //en milisegundos
+    var equMiliAnio = 31536000*1000;
+    var aniosConDecimal = diffAnios / equMiliAnio;
+    var edad = Math.ceil(aniosConDecimal);
+    return edad;
+}
+
 function printTable(data) {
     var html = "";
     for (var i = 0; i < data.length; i++) {
@@ -131,6 +154,7 @@ function printTable(data) {
         html += "<th scope='row'>" + (i + 1) + "</th>"
         html += "<td>" + data[i].nombres + "</td>";
         html += "<td>" + data[i].fechaNacimiento + "</td>";
+        html += "<td>" + calcularEdad(data[i].fechaNacimiento) + "</td>";
         html += "<td> <div class='userColor' style='background-color:" + data[i].color + "'></div> <label class='detail-color'>" + data[i].color + "</label> </td>";
         html += "<td>" + data[i].correo + "</td>";
         html += "<td>" + data[i].rangoSalario + "</td>";
@@ -151,6 +175,14 @@ function printTable(data) {
             eliminar(e.target.getAttribute("data-id"));
         });
     }
+
+    var btnsEditar = document.getElementsByClassName("editar");
+    for(var i = 0; i < btnsEditar.length; i++) {
+        var btnEditar = btnsEditar[i];
+        btnEditar.addEventListener('click', function(e) {
+            editar(e.target.getAttribute("data-id"));
+        });
+    }
 }
 
 function getBase64(file) {
@@ -164,6 +196,27 @@ function getBase64(file) {
         console.log('Error: ', error);
         return "";
     };
+}
+
+function editar(i) {
+    indexUser = i;
+    var arrayUsers = loadData();
+    if(i >= arrayUsers.length) {
+        alert("El elemento a editar no existe!");
+        return;
+    } 
+    if(i < 0) {
+        alert("El elemento a editar no es valido!");
+        return;
+    } 
+    var objEditar = arrayUsers[i];
+    nombres.value = objEditar.nombres;
+    fechaNacimiento.value = objEditar.fechaNacimiento;
+    color.value = objEditar.color;
+    correo.value = objEditar.correo;
+    rango_salario.value = objEditar.rangoSalario;
+    telefono.value = objEditar.telefono;
+    
 }
 
 function eliminar(i) {
