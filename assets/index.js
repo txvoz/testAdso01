@@ -1,6 +1,7 @@
 window.addEventListener("load", onloadwindow)
 var avatarBase64 = null;
 var indexUser = null;
+var urlApiUser = "http://localhost:8082/user";
 
 function onloadwindow(e) {
     var btnSubmit = document.getElementById("btnSubmit");
@@ -10,7 +11,6 @@ function onloadwindow(e) {
     btnClearLocalStorage.addEventListener("click", deleteLocalStorageData);
 
     var arrayUsers = loadData();
-    printTable(arrayUsers);
 }
 
 function deleteLocalStorageData() {
@@ -50,11 +50,11 @@ function validarForm() {
         isValid = false;
     }
 
-    avatar.classList.remove("input-error");
+    /*avatar.classList.remove("input-error");
     if (avatar.value === "" && indexUser === null) {
         avatar.classList.add("input-error");
         isValid = false;
-    }
+    }*/
 
     return isValid;
 
@@ -86,62 +86,44 @@ function clickFrmSubmit(e) {
     //-----
     var inpAvatar = document.getElementById("avatar");
     //var avatar = inpAvatar.value;
-    var arrayUsers = loadData();
+
+    /*var arrayUsers = loadData();
     if(indexUser===null || inpAvatar.value!=="") {
         var file = inpAvatar.files[0];
         getBase64(file);
     } else if(indexUser !== null && inpAvatar.value === "") {
         avatarBase64 = arrayUsers[indexUser].avatar;
+    }*/
+
+    //-----
+    //Creacion de objeto 
+    var objUsuario = {
+        "fullName": nombres,
+        "bornDate": fechaNacimiento,
+        "color": color,
+        "email": correo,
+        "phone": telefono
+    };
+
+    if(indexUser===null) { 
+        createData(objUsuario);
+    } else {
+        updateData(objUsuario, indexUser);
     }
 
-    window.setTimeout(function () {
-        //-----
-        //Creacion de objeto 
-        var objUsuario = {
-            "nombres": nombres,
-            "fechaNacimiento": fechaNacimiento,
-            "color": color,
-            "correo": correo,
-            "rangoSalario": rangoSalario,
-            "telefono": telefono,
-            "avatar": avatarBase64
-        };
-        console.log(objUsuario);
-        //*********/
-        if(indexUser===null) {
-            arrayUsers.push(objUsuario);
-        } else {
-            arrayUsers[indexUser] = objUsuario;
-        }
+    
 
-        indexUser = null;
-        
-        printTable(arrayUsers);
-        //*********/
-        jArray = JSON.stringify(arrayUsers);
-        localStorage.setItem("usersData", jArray);
-        //*********/
-        resetData.click();
-    }, 3000);
 }
 
 function loadData() {
-    var arrayUsers = [];
-    //*********/
-    var usersData = localStorage.getItem("usersData");
-    if (usersData === null) {
-        localStorage.setItem("usersData", "[]");
-    } else {
-        arrayUsers = JSON.parse(usersData);
-    }
-    return arrayUsers;
+
 }
 
 function calcularEdad(fecha) {
     var dateNacimiento = new Date(fecha);
     var now = new Date();
     var diffAnios = now - dateNacimiento; //en milisegundos
-    var equMiliAnio = 31536000*1000;
+    var equMiliAnio = 31536000 * 1000;
     var aniosConDecimal = diffAnios / equMiliAnio;
     var edad = Math.ceil(aniosConDecimal);
     return edad;
@@ -152,34 +134,35 @@ function printTable(data) {
     for (var i = 0; i < data.length; i++) {
         html += "<tr>"
         html += "<th scope='row'>" + (i + 1) + "</th>"
-        html += "<td>" + data[i].nombres + "</td>";
-        html += "<td>" + data[i].fechaNacimiento + "</td>";
-        html += "<td>" + calcularEdad(data[i].fechaNacimiento) + "</td>";
+        html += "<td>" + data[i].fullName + "</td>";
+        html += "<td>" + data[i].bornDate + "</td>";
+        html += "<td>" + calcularEdad(data[i].bornDate) + "</td>";
         html += "<td> <div class='userColor' style='background-color:" + data[i].color + "'></div> <label class='detail-color'>" + data[i].color + "</label> </td>";
-        html += "<td>" + data[i].correo + "</td>";
-        html += "<td>" + data[i].rangoSalario + "</td>";
-        html += "<td>" + data[i].telefono + "</td>";
-        html += "<td><img src='" + data[i].avatar + "' class='avatar' width='50px' height='50px' /></td>";
+        html += "<td>" + data[i].email + "</td>";
+        html += "<td> -- </td>";
+        html += "<td>" + data[i].phone + "</td>";
+        //html += "<td><img src='" + data[i].avatar + "' class='avatar' width='50px' height='50px' /></td>";
+        html += "<td></td>";
         html += "<td>";
-        html += "<div data-id='" + i + "' class='eliminar'>Eliminar</div>";
-        html += "<div data-id='" + i + "' class='editar'>Editar</div>"
+        html += "<div data-id='" + data[i].id + "' class='eliminar'>Eliminar</div>";
+        html += "<div data-id='" + data[i].id + "' class='editar'>Editar</div>"
         html += "</td>";
         html += "</tr>";
     }
     bodyList.innerHTML = html;
 
     var btnsEliminar = document.getElementsByClassName("eliminar");
-    for(var i = 0; i < btnsEliminar.length; i++) {
+    for (var i = 0; i < btnsEliminar.length; i++) {
         var btnEliminar = btnsEliminar[i];
-        btnEliminar.addEventListener('click', function(e) {
+        btnEliminar.addEventListener('click', function (e) {
             eliminar(e.target.getAttribute("data-id"));
         });
     }
 
     var btnsEditar = document.getElementsByClassName("editar");
-    for(var i = 0; i < btnsEditar.length; i++) {
+    for (var i = 0; i < btnsEditar.length; i++) {
         var btnEditar = btnsEditar[i];
-        btnEditar.addEventListener('click', function(e) {
+        btnEditar.addEventListener('click', function (e) {
             editar(e.target.getAttribute("data-id"));
         });
     }
@@ -199,45 +182,112 @@ function getBase64(file) {
 }
 
 function editar(i) {
-    indexUser = i;
-    var arrayUsers = loadData();
-    if(i >= arrayUsers.length) {
-        alert("El elemento a editar no existe!");
-        return;
-    } 
-    if(i < 0) {
-        alert("El elemento a editar no es valido!");
-        return;
-    } 
-    var objEditar = arrayUsers[i];
-    nombres.value = objEditar.nombres;
-    fechaNacimiento.value = objEditar.fechaNacimiento;
-    color.value = objEditar.color;
-    correo.value = objEditar.correo;
-    rango_salario.value = objEditar.rangoSalario;
-    telefono.value = objEditar.telefono;
-    
+    loadDataById(i);
+}
+
+function updateData(request, id) {
+    request = JSON.stringify(request);
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", urlApiUser + "/" + id);
+    xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+    xhr.send(request);
+    //xhr.responseType = "json";
+    xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            indexUser = null;
+            const data = xhr.response;
+            console.log(data);
+            loadData();
+            resetData.click();
+        } else {
+            alert("Error al ejecutar la transaccion, el servidor no puede procesar la solicitud");
+            console.log(`Error: ${xhr.status}`);
+        }
+    };
 }
 
 function eliminar(i) {
-    var arrayUsers = loadData();
-    if(i >= arrayUsers.length) {
-        alert("El elemento a eliminar no existe!");
-        return;
-    } 
-    if(i < 0) {
-        alert("El elemento a eliminar no es valido!");
-        return;
-    } 
-    if(confirm("Esta seguro que desea eliminar a " + arrayUsers[i].nombres + " de la lista?")) {
-        var arrTemp = [];
-        for(var j = 0; j < arrayUsers.length; j++) {
-            if(j != i) {
-                arrTemp.push(arrayUsers[j]);
-            }
-        }
-        jArray = JSON.stringify(arrTemp);
-        localStorage.setItem("usersData", jArray);
-        printTable(arrTemp);
+    if (confirm("Esta seguro que desea eliminar el registro de la lista?")) {
+        deleteData(i);
     }
+}
+
+function loadDataById(id) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", urlApiUser + "/" +id);
+    xhr.send();
+    xhr.responseType = "json";
+    xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+
+            const data = xhr.response;
+            console.log(data);
+            nombres.value = data.fullName;
+
+            var newDate =  data.bornDate.replace("T","-");
+            var arrayDate = newDate.split("-");
+            fechaNacimiento.value = arrayDate[0]+"-"+arrayDate[1]+"-"+arrayDate[2];
+            color.value = data.color;
+            correo.value = data.email;
+            telefono.value = data.phone;
+            indexUser = id;
+
+        } else {
+            alert("Error al ejecutar la transaccion, el servidor no puede procesar la solicitud");
+            console.log(`Error: ${xhr.status}`);
+        }
+    };
+}
+
+function createData(request) {
+    request = JSON.stringify(request);
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", urlApiUser);
+    xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+    xhr.send(request);
+    //xhr.responseType = "json";
+    xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            const data = xhr.response;
+            console.log(data);
+            loadData();
+            resetData.click();
+        } else {
+            alert("Error al ejecutar la transaccion, el servidor no puede procesar la solicitud");
+            console.log(`Error: ${xhr.status}`);
+        }
+    };
+}
+
+function loadData() {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", urlApiUser);
+    xhr.send();
+    xhr.responseType = "json";
+    xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            const data = xhr.response;
+            console.log(data);
+            printTable(data)
+        } else {
+            alert("Error al ejecutar la transaccion, el servidor no puede procesar la solicitud");
+            console.log(`Error: ${xhr.status}`);
+        }
+    };
+}
+
+function deleteData(id) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("DELETE", urlApiUser + "/" + id);
+    xhr.send();
+    //xhr.responseType = "json";
+    xhr.onload = () => {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            const data = xhr.response;
+            loadData();
+        } else {
+            alert("Error al ejecutar la transaccion, el servidor no puede procesar la solicitud");
+            console.log(`Error: ${xhr.status}`);
+        }
+    };
 }
